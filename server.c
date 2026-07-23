@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -29,5 +30,19 @@ int main(void){
             return 1;
         }
     printf("socket bound sucessfully\n");
+    if(listen(server_fd, 5) == -1){
+    perror("Listen fail");
+    exit(EXIT_FAILURE);
+    }
+    printf("Waiting for a client...\n");
+    int client_fd = accept(server_fd,NULL, NULL);
+    if(client_fd == -1){
+        perror("accept failed");
+        exit(EXIT_FAILURE);
+    }
+    else{
+        printf("Client connection sucessfull!");
+    }
+
     return 0;
     }
