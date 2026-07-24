@@ -43,6 +43,19 @@ int main(void){
     else{
         printf("Client connection sucessfull!");
     }
-
+    char buffer[1024];
+    int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+    if(bytes_received == -1){
+        perror("recv failed");
+        exit(EXIT_FAILURE);
+    }
+    if(bytes_received == 0){
+        printf("Client disconnected.\n");
+        close(client_fd);
+    }
+    else{
+        buffer[bytes_received] = '\0';
+        printf("Received : %s\n", buffer);
+    }
     return 0;
     }
