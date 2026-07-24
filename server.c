@@ -41,7 +41,7 @@ int main(void){
         exit(EXIT_FAILURE);
     }
     else{
-        printf("Client connection sucessfull!");
+        printf("Client connection sucessfull!\n");
     }
     char buffer[1024];
     int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
