@@ -44,6 +44,7 @@ int main(void){
         printf("Client connection sucessfull!\n");
     }
     char buffer[1024];
+    while(1){
     int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
     if(bytes_received == -1){
         perror("recv failed");
@@ -56,6 +57,6 @@ int main(void){
     else{
         buffer[bytes_received] = '\0';
         printf("Received : %s\n", buffer);
-    }
+    }}
     return 0;
     }

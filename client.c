@@ -17,7 +17,10 @@ int main(void){
         exit(EXIT_FAILURE);
     }
     printf("Connected to server!\n");
-    char *message ="Hellow Server!";
-    send(client_fd, message, strlen(message), 0);
+    char message[1024];
+    while(1) {
+        fgets(message, sizeof(message), stdin);
+         send(client_fd, message, strlen(message), 0);
+    }
     return 0;
 }
