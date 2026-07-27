@@ -6,6 +6,12 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <pthread.h>
+
+void *handle_client(void *arg) {
+    (void)arg;
+    return NULL;
+}
 
 int main(void)
 {
