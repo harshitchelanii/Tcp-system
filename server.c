@@ -27,7 +27,7 @@ void *handle_client(void *arg) {
     }
 
     buffer[bytes_received] = '\0';
-    printf("Received: %s\n", buffer);
+    printf("Client %d: %s\n", client_fd, buffer);
   }
   close(client_fd);
   return NULL;
