@@ -7,11 +7,20 @@
 #include <netinet/in.h>
 #include <pthread.h>
 #include <sys/socket.h>
+#define MAX_CLIENTS 100
+
+int clients[MAX_CLIENTS];
+int client_count = 0;
+pthread_mutex_t client_mutex;
 
 void *handle_client(void *arg) {
   int client_fd = *(int *)arg;
   free(arg);
   char buffer[1024];
+  pthread_mutex_lock(&client_mutex);
+  clients[client_count] = client_fd;
+  client_count++;
+  pthread_mutex_unlock(&client_mutex);
   while (1) {
 
     int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
@@ -34,6 +43,7 @@ void *handle_client(void *arg) {
 }
 
 int main(void) {
+  pthread_mutex_init(&client_mutex, NULL);
   printf("TCP server is starting...\n");
 
   int server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -79,8 +89,6 @@ int main(void) {
 
     pthread_t thread;
     pthread_create(&thread, NULL, handle_client, client);
-    {
-    }
     pthread_detach(thread);
   }
 
