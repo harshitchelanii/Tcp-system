@@ -10,7 +10,6 @@
 #define MAX_CLIENTS 100
 
 int clients[MAX_CLIENTS];
-int client_count = 0;
 pthread_mutex_t client_mutex;
 
 void *handle_client(void *arg) {
@@ -18,8 +17,14 @@ void *handle_client(void *arg) {
   free(arg);
   char buffer[1024];
   pthread_mutex_lock(&client_mutex);
-  clients[client_count] = client_fd;
-  client_count++;
+  for (int i = 0; i < MAX_CLIENTS; i++)
+  {
+    clients[i] = -1;
+  if (clients[i] == -1){
+    clients[i] = client_fd;
+    break;
+  }
+  }
   pthread_mutex_unlock(&client_mutex);
   while (1) {
 
@@ -71,6 +76,11 @@ int main(void) {
   if (listen(server_fd, 5) == -1) {
     perror("listen");
     return 1;
+  }
+
+  for (int i = 0; i < MAX_CLIENTS; i++)
+  {
+     clients[i] = -1;
   }
 
   while (1) {
