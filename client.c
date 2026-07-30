@@ -51,7 +51,7 @@ int main(void){
     pthread_create(&receive_thread, NULL, receive_messages, socket_ptr);
 
     pthread_detach(receive_thread);
-    
+
     char message[1024];
     while(1) {
         fgets(message, sizeof(message), stdin);
