@@ -46,6 +46,16 @@ void *handle_client(void *arg) {
         }
 
         buffer[bytes_received] = '\0';
+
+        for (int i = 0; i < MAX_CLIENTS; i++)
+        {
+        if (clients[i] != -1 && clients[i] != client_fd)
+        {
+        send(clients[i], buffer, bytes_received, 0);
+        }
+        
+        }
+
         printf("Client %d: %s\n", client_fd, buffer);
     }
 

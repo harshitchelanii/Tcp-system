@@ -5,6 +5,31 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <pthread.h>
+
+void *receive_messages(void *arg)
+{
+    int client_fd = *(int *)arg;
+
+    char buffer[1024];
+
+    while(1)
+    {
+        int bytes_received = recv(client_fd, buffer, sizeof(buffer)-1, 0);
+
+        if(bytes_received <= 0)
+        {
+            printf("Server disconnected.\n");
+            break;
+        }
+
+        buffer[bytes_received] = '\0';
+
+        printf("\n%s", buffer);
+    }
+
+    return NULL;
+}
 
 int main(void){
     int client_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -17,6 +42,16 @@ int main(void){
         exit(EXIT_FAILURE);
     }
     printf("Connected to server!\n");
+    int *socket_ptr = malloc(sizeof(int));
+
+    *socket_ptr = client_fd;
+
+    pthread_t receive_thread;
+
+    pthread_create(&receive_thread, NULL, receive_messages, socket_ptr);
+
+    pthread_detach(receive_thread);
+    
     char message[1024];
     while(1) {
         fgets(message, sizeof(message), stdin);
