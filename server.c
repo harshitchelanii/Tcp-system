@@ -10,7 +10,13 @@
 
 #define MAX_CLIENTS 100
 
-int clients[MAX_CLIENTS];
+struct Client
+{
+ int socket;
+ char username[50];
+};
+
+struct Client clients[MAX_CLIENTS];
 pthread_mutex_t client_mutex;
 
 void *handle_client(void *arg) {
@@ -19,18 +25,20 @@ void *handle_client(void *arg) {
 
     char buffer[1024];
 
-    // Add client to client list
     pthread_mutex_lock(&client_mutex);
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
-        if (clients[i] == -1) {
-            clients[i] = client_fd;
+        if (clients[i].socket == -1) {
+            clients[i].socket = client_fd;
             break;
         }
     }
 
     pthread_mutex_unlock(&client_mutex);
-
+    
+    char username[50];
+    recv(client_fd, username, sizeof(username) - 1, 0);
+    
     while (1) {
 
         int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
@@ -49,9 +57,9 @@ void *handle_client(void *arg) {
 
         for (int i = 0; i < MAX_CLIENTS; i++)
         {
-        if (clients[i] != -1 && clients[i] != client_fd)
+        if (clients[i].socket != -1 && clients[i].socket != client_fd)
         {
-        send(clients[i], buffer, bytes_received, 0);
+        send(clients[i].socket, buffer, bytes_received, 0);
         }
         
         }
@@ -63,8 +71,8 @@ void *handle_client(void *arg) {
     pthread_mutex_lock(&client_mutex);
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
-        if (clients[i] == client_fd) {
-            clients[i] = -1;
+        if (clients[i].socket == client_fd) {
+            clients[i].socket = -1;
             break;
         }
     }
@@ -80,7 +88,7 @@ int main(void) {
     pthread_mutex_init(&client_mutex, NULL);
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
-        clients[i] = -1;
+        clients[i].socket = -1;
     }
 
     printf("TCP server is starting...\n");
@@ -112,7 +120,6 @@ int main(void) {
         perror("listen");
         return 1;
     }
-
     while (1) {
 
         printf("Waiting for a client...\n");
