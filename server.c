@@ -23,6 +23,8 @@ void *handle_client(void *arg) {
     int client_fd = *(int *)arg;
     free(arg);
 
+
+    int client_index = -1;
     char buffer[1024];
 
     pthread_mutex_lock(&client_mutex);
@@ -30,6 +32,7 @@ void *handle_client(void *arg) {
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (clients[i].socket == -1) {
             clients[i].socket = client_fd;
+            client_index = i;
             break;
         }
     }
@@ -37,8 +40,18 @@ void *handle_client(void *arg) {
     pthread_mutex_unlock(&client_mutex);
     
     char username[50];
-    recv(client_fd, username, sizeof(username) - 1, 0);
+    int bytes_received = recv(client_fd, username, sizeof(username) - 1, 0);
+
+    if (bytes_received <= 0) {
+        close(client_fd);
+        return NULL;
+    }
     
+    username[bytes_received] = '\0';
+    pthread_mutex_lock(&client_mutex);
+    strcpy(clients[client_index].username, username);
+    pthread_mutex_unlock(&client_mutex);
+    printf("Client registered: %s\n", clients[client_index].username);
     while (1) {
 
         int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
@@ -78,6 +91,7 @@ void *handle_client(void *arg) {
     }
 
     pthread_mutex_unlock(&client_mutex);
+
 
     close(client_fd);
     return NULL;
@@ -153,6 +167,7 @@ int main(void) {
 
         pthread_detach(thread);
     }
+
 
     close(server_fd);
     pthread_mutex_destroy(&client_mutex);
