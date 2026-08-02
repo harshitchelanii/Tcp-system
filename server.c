@@ -20,6 +20,22 @@ struct Client
 struct Client clients[MAX_CLIENTS];
 pthread_mutex_t client_mutex;
 
+void broadcast_message(const char *message, int sender_socket) {
+    pthread_mutex_lock(&client_mutex);
+
+    for (int i = 0; i < MAX_CLIENTS; i++)
+    {
+        if (clients[i].socket != -1 &&
+            clients[i].socket != sender_socket)
+        {
+            send(clients[i].socket, message, strlen(message), 0);
+        }
+    }
+
+    pthread_mutex_unlock(&client_mutex);
+}
+
+
 void *handle_client(void *arg) {
     int client_fd = *(int *)arg;
     free(arg);
@@ -40,19 +56,45 @@ void *handle_client(void *arg) {
     }
 
     pthread_mutex_unlock(&client_mutex);
-    
+
+    if (client_index == -1) {
+        // Server full, no free slot for this client
+        printf("Server full, rejecting connection\n");
+        close(client_fd);
+        return NULL;
+    }
+
     char username[50];
     int bytes_received = recv(client_fd, username, sizeof(username) - 1, 0);
 
     if (bytes_received <= 0) {
+        pthread_mutex_lock(&client_mutex);
+        clients[client_index].socket = -1;
+        pthread_mutex_unlock(&client_mutex);
         close(client_fd);
         return NULL;
     }
     
     username[bytes_received] = '\0';
     pthread_mutex_lock(&client_mutex);
-    strcpy(clients[client_index].username, username);
+
+    strncpy(clients[client_index].username, username, sizeof(clients[client_index].username) - 1);
+    clients[client_index].username[sizeof(clients[client_index].username) - 1] = '\0';
+    
+    char system_message[200];
+    
+    snprintf(
+    system_message,
+    sizeof(system_message),
+    "[WAYP] %s joined the chat.\n",
+    clients[client_index].username
+    );
+
+    printf("%s", system_message);
+
     pthread_mutex_unlock(&client_mutex);
+
+    broadcast_message(system_message, client_fd);
     printf("Client registered: %s\n", clients[client_index].username);
     while (1) {
 
@@ -64,7 +106,6 @@ void *handle_client(void *arg) {
         }
 
         if (bytes_received == 0) {
-            printf("Client disconnected.\n");
             break;
         }
 
@@ -79,20 +120,23 @@ void *handle_client(void *arg) {
             buffer
         );
 
-        pthread_mutex_lock(&client_mutex);
+        broadcast_message(final_message, client_fd);
 
-        for (int i = 0; i < MAX_CLIENTS; i++)
-        {
-        if (clients[i].socket != -1 && clients[i].socket != client_fd)
-        {
-        send(clients[i].socket, final_message, strlen(final_message), 0);
-        }
-        
-        }
-        pthread_mutex_unlock(&client_mutex);
 
         printf("%s\n", final_message);
     }
+
+    // Notify everyone else that this client left, however the loop ended
+    snprintf(
+        system_message,
+        sizeof(system_message),
+        "[WAYP] %s left the chat.\n",
+        clients[client_index].username
+    );
+
+    broadcast_message(system_message, client_fd);
+
+    printf("%s\n", system_message);
 
     // Remove client from client list
     pthread_mutex_lock(&client_mutex);

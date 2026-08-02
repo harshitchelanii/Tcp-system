@@ -25,7 +25,8 @@ void *receive_messages(void *arg)
 
         buffer[bytes_received] = '\0';
 
-        printf("\n%s", buffer);
+        printf("%s", buffer);
+        fflush(stdout);
     }
 
     return NULL;
