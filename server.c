@@ -10,6 +10,7 @@
 
 #define MAX_CLIENTS 100
 
+
 struct Client
 {
  int socket;
@@ -26,6 +27,7 @@ void *handle_client(void *arg) {
 
     int client_index = -1;
     char buffer[1024];
+    char final_message[1200];
 
     pthread_mutex_lock(&client_mutex);
 
@@ -68,16 +70,28 @@ void *handle_client(void *arg) {
 
         buffer[bytes_received] = '\0';
 
+
+        snprintf(
+            final_message,
+            sizeof(final_message),
+            "%s: %s",
+            clients[client_index].username,
+            buffer
+        );
+
+        pthread_mutex_lock(&client_mutex);
+
         for (int i = 0; i < MAX_CLIENTS; i++)
         {
         if (clients[i].socket != -1 && clients[i].socket != client_fd)
         {
-        send(clients[i].socket, buffer, bytes_received, 0);
+        send(clients[i].socket, final_message, strlen(final_message), 0);
         }
         
         }
+        pthread_mutex_unlock(&client_mutex);
 
-        printf("Client %d: %s\n", client_fd, buffer);
+        printf("%s\n", final_message);
     }
 
     // Remove client from client list
