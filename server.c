@@ -10,7 +10,6 @@
 
 #define MAX_CLIENTS 100
 
-
 struct Client
 {
  int socket;
@@ -19,6 +18,19 @@ struct Client
 
 struct Client clients[MAX_CLIENTS];
 pthread_mutex_t client_mutex;
+
+int find_client_by_username(const char *username){
+    pthread_mutex_lock(&client_mutex);
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        if (clients[i].socket != -1 && strcmp(clients[i].username, username) == 0) {
+            pthread_mutex_unlock(&client_mutex);
+            return i;
+        }
+    }
+    pthread_mutex_unlock(&client_mutex);
+    return -1;
+
+}
 
 void broadcast_message(const char *message, int sender_socket) {
     pthread_mutex_lock(&client_mutex);
