@@ -122,7 +122,7 @@ void *handle_client(void *arg) {
         int target_index = find_client_by_username(target_username);
         if (target_index == -1) {
           char buf[128];
-          snprintf(buf, sizeof(buf), "[WAYP] \"%s\" is not online.\n",
+          snprintf(buf, sizeof(buf), "[WAYP] %s is not online.\n",
                    target_username);
           send(client_fd, buf, strlen(buf), 0);
           continue;
