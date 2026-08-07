@@ -42,6 +42,16 @@ void broadcast_message(const char *message, int sender_socket) {
   pthread_mutex_unlock(&client_mutex);
 }
 
+  enum MessageType{
+  PRIVATE,
+  COMMAND, 
+  PUBLIC
+                };
+get_message_type(buffer)
+MessgaeType type = get_message_type(buffer);
+
+
+
 void *handle_client(void *arg) {
   int client_fd = *(int *)arg;
   free(arg);
